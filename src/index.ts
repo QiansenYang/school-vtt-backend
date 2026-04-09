@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { db } from "../db/index.js";
-import { schools } from "../db/schema.js";
+import { schools, teamMembers } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const app = express();
@@ -75,14 +75,24 @@ app.put("/schools/:id", async (req, res) => {
 // DELETE A SCHOOL
 app.delete("/schools/:id", async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body;
   try {
-    const updated = await db.update(schools).set(updateData).where(eq(schools.id, parseInt(id))).returning();
-    res.json(updated[0]);
+    const deleted = await db.delete(schools).where(eq(schools.id, parseInt(id))).returning();
+    res.json(deleted[0]);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update" })
+    res.status(500).json({ error: "Failed to delete" });
   }
-})
+});
+
+
+app.get("/team", async (req, res) => {
+  try {
+    const allMembers = await db.select().from(teamMembers);
+    res.json(allMembers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database query failed" });
+  }
+});
 
 app.listen(port, () => {
   console.log(`🚀 Backend Server ready at http://localhost:${port}`);
